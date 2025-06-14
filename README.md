@@ -1,33 +1,43 @@
-# 📊 BookMyDiscount.com Dashboard – PHP Project
+# BookMyDiscount.com
 
-Welcome to the **BookMyDiscount.com Dashboard**, a PHP-based admin interface built to manage users, discounts, vendors, and sales on the BookMyDiscount.com platform. This dashboard allows administrators to monitor system statistics, manage coupon listings, and track vendor performance effectively.
+![BookMyDiscount.com Banner](dashboards.png)
+
+BookMyDiscount.com is a PHP-based project designed to provide users with information about discounted deals and offers. This project utilizes PHP, Hack, and CSS.
+
+## Features
+- Listing of discounted products and services
+- User-friendly interface
+- Offer search and filter options
+- Admin panel for product/offer management
+
+## Technology Stack
+- **Backend:** PHP, Hack
+- **Frontend:** CSS
+- **Database:** MySQL (expected)
+- **Web Server:** Apache/Nginx (recommended)
+
+## Installation
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/rakeshsaunr/bookmydiscount.com.git
+   ```
+2. Place the project files in your web server's root directory.
+3. Make sure PHP and MySQL are installed.
+4. Set up the database (import schema file if provided).
+5. Update your database details in `config.php` or `.env`.
+6. Open the project in your browser:  
+   ```
+   http://localhost/bookmydiscount.com
+   ```
+
+## Contribution
+- Send suggestions and improvements via Pull Requests or Issues.
+- Please follow the coding style and guidelines.
+
+## License
+This project is open source. See the LICENSE file for details.
 
 ---
 
-## 🚀 Project Features
-
-- 🔐 Admin Login & Session Management  
-- 👤 User & Vendor Management  
-- 🏷️ Discount/Coupon Listing & Approval  
-- 📈 Dashboard Analytics (Users, Coupons, Vendors, Revenue, etc.)  
-- 🔍 Search & Filter Functionality  
-- 📁 PDF/CSV Export for Reports  
-- 📅 Date-wise Reporting  
-- 💬 Contact/Support Queries Management  
-
----
-
-## 🛠️ Technologies Used
-
-- **Frontend:** HTML5, CSS3, Bootstrap  
-- **Backend:** PHP (Core PHP or PHP with Framework)  
-- **Database:** MySQL  
-- **Libraries/Tools:**  
-  - Chart.js (for graphs and visual analytics)  
-  - DataTables.js (for tables and export features)  
-  - PHPMailer (for contact or support emails)  
-
----
-
-## 📂 Project Structure
-
+**Contact:**  
+If you have any questions or suggestions, please post them on [GitHub Issues](https://github.com/rakeshsaunr/bookmydiscount.com/issues).
