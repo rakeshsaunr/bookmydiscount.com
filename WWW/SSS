@@ -1,0 +1,253 @@
+<?php
+// Database connection
+$servername = "localhost";
+$username = "root";
+$password = "";
+$database = "eds_erp";
+
+$conn = new mysqli($servername, $username, $password, $database);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Handle CSV upload
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
+    $fileName = $_FILES['csv_file']['tmp_name'];
+    if ($_FILES['csv_file']['size'] > 0) {
+        $file = fopen($fileName, "r");
+
+        // Skip the first row if it contains column names
+        fgetcsv($file);
+
+        while (($row = fgetcsv($file, 1000, ",")) !== FALSE) {
+            $storeId = $row[0];
+            $storeName = $row[1];
+            $inventoryName = $row[2];
+            $totalCost = $row[3];
+            $totalUse = $row[4];
+            $remaining = $row[5];
+            $payment = $row[6];
+
+            // Insert or update the database
+            $sql = "INSERT INTO add_ivantory_name (store_id, store_name, inventory_name, total_cost, total_use, remaining, payment)
+                    VALUES ('$storeId', '$storeName', '$inventoryName', '$totalCost', '$totalUse', '$remaining', '$payment')
+                    ON DUPLICATE KEY UPDATE 
+                        total_cost = VALUES(total_cost),
+                        total_use = VALUES(total_use),
+                        remaining = VALUES(remaining),
+                        payment = VALUES(payment)";
+            $conn->query($sql);
+        }
+        fclose($file);
+
+        echo "<script>alert('CSV data uploaded successfully.');</script>";
+    }
+}
+
+// Fetch unique store names for dropdown
+$storeNamesResult = $conn->query("SELECT DISTINCT store_name FROM add_ivantory_name");
+
+// Filter and fetch data
+$selectedStoreName = isset($_GET['store_name']) ? $_GET['store_name'] : '';
+$sql = "SELECT * FROM add_ivantory_name";
+if ($selectedStoreName) {
+    $sql .= " WHERE store_name = '" . $conn->real_escape_string($selectedStoreName) . "'";
+}
+$result = $conn->query($sql);
+
+// Handle CSV export
+if (isset($_GET['export']) && $_GET['export'] === 'csv') {
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment; filename="inventory_data.csv"');
+
+    $output = fopen("php://output", "w");
+    fputcsv($output, ['Store ID', 'Store Name', 'Inventory Name', 'Total Codes', 'Use Codes', 'Left Codes', 'Close Payment']);
+
+    $exportResult = $conn->query($sql);
+    if ($exportResult && $exportResult->num_rows > 0) {
+        while ($row = $exportResult->fetch_assoc()) {
+            fputcsv($output, [
+                $row['store_id'], $row['store_name'], $row['inventory_name'],
+                $row['total_cost'], $row['total_use'], $row['remaining'], $row['payment']
+            ]);
+        }
+    }
+    fclose($output);
+    exit;
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Table</title>
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+.right-align {
+    text-align: right;
+    margin: 20px;
+    margin-top: -45px;
+}
+
+form {
+    display: inline-block;
+    margin: 5px;
+}
+
+button {
+    padding: 10px 15px;
+    background-color: black;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: red;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 1rem;
+}
+
+th, td {
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: deepskyblue;
+    color: white;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: lightblue;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .right-align {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    table {
+        font-size: 0.9rem;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+
+    form {
+        display: block;
+        margin: 10px auto;
+    }
+
+    select, input[type="file"], button {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    table {
+        font-size: 0.8rem;
+    }
+
+    th, td {
+        padding: 5px;
+    }
+
+    button {
+        padding: 8px 12px;
+    }
+}
+
+    </style>
+</head>
+<body>
+
+    <!-- Filter by Store -->
+    <form method="GET" action="">
+        <label for="store_name">Filter by Store Name:</label>
+        <select name="store_name" id="store_name">
+            <option value="">-- All Stores --</option>
+            <?php
+            if ($storeNamesResult && $storeNamesResult->num_rows > 0) {
+                while ($storeRow = $storeNamesResult->fetch_assoc()) {
+                    $selected = ($storeRow['store_name'] === $selectedStoreName) ? 'selected' : '';
+                    echo "<option value=\"{$storeRow['store_name']}\" $selected>{$storeRow['store_name']}</option>";
+                }
+            }
+            ?>
+        </select>
+        <button type="submit">Filter</button>
+    </form>
+
+    <!-- Upload and Download Buttons -->
+    <div class="right-align">
+        <form method="POST" enctype="multipart/form-data">
+            <input type="file" name="csv_file" accept=".csv" required>
+            <button type="submit">Upload</button>
+        </form>
+        <form method="GET" action="">
+            <input type="hidden" name="export" value="csv">
+            <button type="submit">Download CSV</button>
+        </form>
+    </div>
+
+    <!-- Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>Store ID</th>
+                <th>Store Name</th>
+                <th>Inventory Name</th>
+                <th>Total Codes</th>
+                <th>Use Codes</th>
+                <th>Left Codes</th>
+                <th>Close Payment</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            if ($result && $result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                    echo "<tr>
+                        <td>{$row['store_id']}</td>
+                        <td>{$row['store_name']}</td>
+                        <td>{$row['inventory_name']}</td>
+                        <td>{$row['total_cost']}</td>
+                        <td>{$row['total_use']}</td>
+                        <td>{$row['remaining']}</td>
+                        <td>{$row['payment']}</td>
+                    </tr>";
+                }
+            } else {
+                echo "<tr><td colspan='7'>No records found</td></tr>";
+            }
+            ?>
+        </tbody>
+    </table>
+</body>
+</html>
+
+<?php $conn->close(); ?>
